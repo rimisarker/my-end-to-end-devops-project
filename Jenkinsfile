@@ -1,9 +1,9 @@
 pipeline {
     agent any
 
+    // environment ব্
     environment {
-        // ডকার হাবের ইউজারনেম এখানে দেবেন
-        DOCKER_HUB_USER = 'your-dockerhub-username'
+        DOCKER_HUB_USER = 'rimisarker' 
         FRONTEND_IMAGE  = "my-frontend-app"
         BACKEND_IMAGE   = "my-backend-app"
     }
@@ -12,14 +12,12 @@ pipeline {
         stage('1. Checkout Code') {
             steps {
                 echo 'Fetching latest code from GitHub...'
-                // জেনকিন্স অটোমেটিক গিটহাব থেকে কোড নামাবে
             }
         }
 
         stage('2. Security Scan (Trivy)') {
             steps {
                 echo 'Scanning source code filesystem for vulnerabilities...'
-                // ট্রাভি দিয়ে পুরো সোর্স কোড স্ক্যান করা
                 sh 'trivy fs . --severity HIGH,CRITICAL'
             }
         }
