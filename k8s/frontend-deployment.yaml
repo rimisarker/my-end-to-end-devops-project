@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          # 🚨 জেনকিন্সের সাকসেসফুল বিল্ড নাম্বার অনুযায়ী এখানে ট্যাগ দিন (যেমন আপনার ক্ষেত্রে ট্যাগ ৭)
+          image: rimisarker/frontend:7  
+          ports:
+            - containerPort: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-service
+spec:
+  selector:
+    app: frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      # 🚨 লোকাল মেশিনে ব্রাউজার থেকে অ্যাক্সেস করার জন্য NodePort ব্যবহার করছি
+      nodePort: 30000 
+  type: NodePort
