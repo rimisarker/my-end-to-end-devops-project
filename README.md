@@ -79,3 +79,25 @@ This phase focuses on the containerization of a loosely coupled 3-tier microserv
 
 #### Q2: What is the significance of utilizing Alpine-based images in your Dockerfile?
 **Answer:** Standard base images contain heavy operating system utilities (shells, package managers, system tools) that are never used by the application runtime. Alpine Linux cuts down the image size drastically. Smaller images mean faster CI/CD pipeline build times, lower disk consumption on Kubernetes nodes, and a significantly smaller attack surface for hackers.
+
+---
+
+## 🚀 Phase 3: CI/CD Pipeline Automation (Jenkins & Trivy)
+
+In this phase, we automated the entire Integration process using **Jenkins Declarative Pipeline** and secured our build lifecycle using **Trivy Vulnerability Scanner**.
+
+
+
+### ⚙️ CI Pipeline Architecture & Workflow:
+1. **Source Code Checkout:** Jenkins automatically pulls the latest code from GitHub upon every commit on the `main` branch.
+2. **Security Scan (Trivy FS):** Trivy scans the raw source code repository filesystem for any leaked secrets, misconfigurations, or high/critical vulnerabilities before building.
+3. **Docker Image Build:** Upon a successful security scan, Jenkins uses the local Docker daemon to build optimized production-ready Docker images for both `Frontend` and `Backend`.
+4. **Image Vulnerability Scan (Trivy Image):** Before pushing to any registry, Trivy deeply scans the built container layers to ensure no vulnerable base packages are included.
+
+### 🛠️ How to Run the Pipeline locally:
+1. Ensure Jenkins is running on your environment (`sudo systemctl start jenkins`).
+2. Make sure the `jenkins` user has appropriate docker permissions:
+   ```bash
+   sudo usermod -aG docker jenkins
+   sudo chmod 666 /var/run/docker.sock
+   sudo systemctl restart jenkins
