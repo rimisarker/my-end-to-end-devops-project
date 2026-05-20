@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  frontend-service:
+    build: ./frontend
+    ports:
+      - "9090:80"
+    depends_on:
+      - backend-service
+
+  backend-service:
+    build: ./backend
+    environment:
+      - MONGO_URI=mongodb://db-service:27017/devopsdb
+    depends_on:
+      - db-service
+
+  db-service:
+    image: mongo:6.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:
