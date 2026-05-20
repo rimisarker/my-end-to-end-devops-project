@@ -79,3 +79,30 @@ sudo chmod 666 /var/run/docker.sock
 sudo systemctl restart jenkins
 
 3.Create a Pipeline Project in Jenkins pointing to this GitHub repository and click "Build Now".
+---
+
+## ☸️ Phase 24 Migration to Kubernetes (K8s)
+
+In this phase, the entire 3-tier architecture was migrated from Docker Compose to a local Kubernetes (**Kind**) cluster to leverage enterprise-grade orchestration, self-healing, and declarative infrastructure scaling.
+
+### 🛠️ K8s Key Implementation Details
+* **Infrastructure as Code (IaC):** Converted manual setups into declarative K8s manifests (`Deployment` and `Service`).
+* **Service Discovery:** Implemented a permanent cluster-internal abstraction layer (`db-service` on port `27017`) to solve dynamic Pod IP and Node.js `EAI_AGAIN` (DNS lookup) routing failures.
+* **Local Cluster Access:** Utilized secure `kubectl port-forwarding` to tunnel internal cluster resources directly to the host machine's browser environment.
+
+### 📂 New Manifests Added (under `/k8s`)
+* **`mongo-deployment.yaml`**: Coordinates the stateful lifecycle of the MongoDB engine instance.
+* **`mongo-service.yaml`**: Provisions a fixed core internal gateway address for secure backend-to-database handshakes.
+
+### 🚀 Commands Used for K8s Deployment & Troubleshooting
+
+1. **Deploying the Database Layer:**
+   ```bash
+   kubectl apply -f k8s/mongo-deployment.yaml
+   kubectl apply -f k8s/mongo-service.yaml
+2.Exposing the Topology to Local Browser:
+# Terminal 1: Frontend Route Mapping
+kubectl port-forward service/frontend-service 8082:80 --address 0.0.0.0
+
+# Terminal 2: Backend API Route Mapping
+kubectl port-forward service/backend-service 5000:5000 --address 0.0.0.0
