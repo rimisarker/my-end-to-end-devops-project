@@ -106,3 +106,77 @@ kubectl port-forward service/frontend-service 8082:80 --address 0.0.0.0
 
 # Terminal 2: Backend API Route Mapping
 kubectl port-forward service/backend-service 5000:5000 --address 0.0.0.0
+
+
+
+
+# Automated GitOps CI/CD Pipeline with Jenkins & ArgoCD
+
+This repository demonstrates a production-ready, fully automated **GitOps CI/CD Pipeline** for a Three-Tier application. The pipeline automates everything from security scanning and Docker image building to GitOps-based continuous deployment using Jenkins and ArgoCD on a Kubernetes cluster.
+
+---
+
+## 🏗️ Architecture Overview
+
+The pipeline implements a complete automated feedback loop:
+
+1. **Developer Push:** Developer commits and pushes code to GitHub.
+2. **CI Stage (Jenkins):** - Checks out the latest code.
+   - Runs a security scan using **Trivy**.
+   - Builds and tags backend and frontend Docker images with the unique `BUILD_NUMBER`.
+   - Pushes the production-ready images to **Docker Hub**.
+3. **Manifest Update:** Jenkins updates the Kubernetes deployment manifests (`k8s/`) with the newly generated image tags and pushes the changes back to GitHub (`[skip ci]`).
+4. **GitOps CD Stage (ArgoCD):** ArgoCD detects the manifest changes via Auto-Sync, prunes old resources, self-heals any drift, and pulls the fresh images into the Kubernetes Cluster.
+
+---
+
+## 🛠️ Tech Stack & Tools
+
+- **CI Automation:** Jenkins (Pipeline-as-Code)
+- **GitOps CD:** ArgoCD
+- **Containerization:** Docker & Docker Hub
+- **Orchestration:** Kubernetes (Minikube / Kind)
+- **Security:** Trivy (File system scanning)
+- **Source Control:** GitHub
+
+---
+
+## 🚀 Pipeline Stages (Jenkinsfile Structure)
+
+### 1. Checkout Code
+Pulls the latest source code from the main branch of the GitHub repository.
+
+### 2. Security Scan (Trivy)
+Scans the filesystem for high and critical vulnerabilities before building container images to ensure secure shipping.
+```bash
+trivy fs . --severity HIGH,CRITICAL
+
+3. Build & Push Docker Images
+Authenticates with Docker Hub using secure credentials and builds both frontend and backend images.
+1.Tags applied: rimisarker/frontend:${BUILD_NUMBER} and rimisarker/backend:${BUILD_NUMBER}
+
+4. Update K8s Manifest & Push to GitHub
+The core GitOps step. Jenkins dynamically modifies k8s/backend-deployment.yaml and k8s/frontend-deployment.yaml using sed commands, commits the changes with [skip ci] to prevent infinite build loops, and pushes them back to GitHub.
+
+⚙️ ArgoCD Configuration
+To maintain zero-touch automation, the ArgoCD application is configured with the following active sync policies:
+
+1.Automated Sync: Enabled (polls Git repository for tag modifications).
+
+2.Prune Resources: Enabled (automatically removes dead or deleted objects).
+
+3.Self-Heal: Enabled (automatically fixes configuration drifts if manual changes occur inside the cluster).
+
+📋 Prerequisites to Run This Pipeline
+1.Jenkins Plugins: Ensure Pipeline, Git, and Credentials Binding plugins are installed.
+
+2.Jenkins Credentials:
+
+I.dockerhub-creds: Username and Password (Token) for Docker Hub.
+
+II.github-creds: Username and Personal Access Token (PAT) with repo scopes for pushing manifest updates.
+
+3.Trivy CLI: Installed on the Jenkins agent machine.
+
+4.ArgoCD: Running inside the Kubernetes cluster and tracking the k8s/ directory of this repo.
+
