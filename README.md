@@ -180,3 +180,80 @@ II.github-creds: Username and Personal Access Token (PAT) with repo scopes for p
 
 4.ArgoCD: Running inside the Kubernetes cluster and tracking the k8s/ directory of this repo.
 
+
+
+## 📊 Infrastructure Monitoring Setup (Prometheus & Grafana)
+
+This section of the project focuses on setting up a lightweight, robust, and real-time monitoring pipeline for our Kubernetes cluster. It ensures high visibility into both node-level resources and individual container behaviors without overloading our system memory.
+
+---
+
+### 🏗️ Monitoring Architecture
+
+The monitoring stack is deployed inside a dedicated `monitoring` namespace and consists of the following components:
+* **Prometheus Server:** Collects and stores time-series metrics from the cluster (optimized with a 1GB memory limit and 2-hour retention).
+* **Node Exporter:** Scrapes hardware and OS metrics from the Kubernetes nodes (CPU, RAM, Disk, Network).
+* **Kube-State-Metrics & cAdvisor:** Listens to the Kubernetes API server and generates metrics about the state of the pods and containers.
+* **Grafana:** Visualizes the metrics collected by Prometheus using production-ready dashboards.
+
+---
+
+### 🛠️ Installation & Setup Steps
+
+#### 1. Create the Namespace
+```bash
+kubectl create namespace monitoring
+
+2. Install Helm (Kubernetes Package Manager)
+curl -fsSL -o get_helm.sh [https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3](https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3)
+chmod 700 get_helm.sh
+./get_helm.sh
+rm get_helm.sh
+
+3. Add Helm Repositories
+helm repo add prometheus-community [https://prometheus-community.github.io/helm-charts](https://prometheus-community.github.io/helm-charts)
+helm repo add grafana [https://grafana.github.io/helm-charts](https://grafana.github.io/helm-charts)
+helm repo update
+4. Deploy Resource-Optimized Prometheus
+helm install prometheus prometheus-community/prometheus \
+  --namespace monitoring \
+  --set alertmanager.enabled=false \
+  --set server.retention=2h \
+  --set server.resources.limits.memory=1Gi
+5. Deploy Grafana
+helm install grafana grafana/grafana --namespace monitoring
+🌐 Accessing the Dashboards
+1. Retrieve Grafana Admin Password
+kubectl get secret --namespace monitoring grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+2. Port-Forward Grafana Service
+kubectl port-forward svc/grafana 3000:80 -n monitoring
+
+Now, open your browser and go to: http://localhost:3000 (Username: admin).
+
+3. Connect Prometheus Data Source
+1.Navigate to Connections -> Data Sources -> Add Data Source.
+
+2.Select Prometheus and configure the URL as:
+[http://prometheus-server.monitoring.svc.cluster.local:80](http://prometheus-server.monitoring.svc.cluster.local:80)
+3.Click Save & Test.
+
+
+
+📊 Imported Production Dashboards
+To achieve full observability, we imported two official dashboards via Grafana IDs:
+
+Kubernetes Node Monitoring (Grafana ID: 1860)
+
+Features: Real-time tracking of Node CPU utilization, RAM usage, Uptime, and Disk I/O.
+
+Kubernetes Pod/Container Monitoring (Grafana ID: 15760)
+
+Features: Granular insights into individual namespaces (e.g., default, monitoring). Tracks memory limits and actual usage for active application containers (frontend, backend, mongodb).
+
+
+🛡️ Resource Management & Stability
+To prevent WSL2/Kind node crashes on local environments (16GB RAM setups), strict memory boundaries were applied:
+
+1.Prometheus Server memory is rigidly capped at 1.00 GiB.
+
+2.Metrics retention is optimized for 2 hours to keep disk overhead minimal while preserving active session history.
