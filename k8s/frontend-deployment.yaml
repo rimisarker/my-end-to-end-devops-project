@@ -15,7 +15,7 @@ spec:
       containers:
         - name: frontend
           # 🚨 জেনকিন্সের সাকসেসফুল বিল্ড নাম্বার অনুযায়ী এখানে ট্যাগ দিন (যেমন আপনার ক্ষেত্রে ট্যাগ ৭)
-          image: rimisarker/frontend:7  
+          image: rimisarker/frontend:8
           ports:
             - containerPort: 80
 
