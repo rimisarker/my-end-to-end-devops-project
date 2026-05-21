@@ -15,7 +15,7 @@ spec:
       containers:
         - name: backend
 
-          image: rimisarker/backend:7
+          image: rimisarker/backend:8
           ports:
             - containerPort: 5000
           env:
